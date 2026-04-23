@@ -21,7 +21,7 @@ for AI, agentic and DevTool monetization.
 
 ---
 
-OpenMeter is a real-time metering and billing engine that
+OpenMeter Cloud, now [Kong Konnect Metering & Billing]([url](https://konghq.com/products/kong-konnect/features/usage-based-metering-and-billing)), is a real-time metering and billing engine that
 helps you track usage, enforce limits, manage subscriptions,
 and automate invoicing — all in one platform. Ingest events
 via a simple API, define meters with flexible aggregations,

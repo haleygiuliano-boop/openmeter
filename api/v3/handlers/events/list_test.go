@@ -1,7 +1,6 @@
 package events
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -15,7 +14,7 @@ import (
 )
 
 func TestFromAPICustomerIDFilter(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	t.Run("nil filter returns nil", func(t *testing.T) {
 		out, err := fromAPICustomerIDFilter(ctx, nil)
@@ -64,7 +63,7 @@ func TestFromAPICustomerIDFilter(t *testing.T) {
 }
 
 func TestParseEventSort(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	t.Run("nil returns empty values", func(t *testing.T) {
 		field, order, err := parseEventSort(ctx, nil)

@@ -36,7 +36,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					Namespace: "my_namespace",
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", 100},
 		},
 		{
@@ -51,7 +51,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND id = ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND id = ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", "event-123", 100},
 		},
 		{
@@ -66,7 +66,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND subject LIKE ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND subject LIKE ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", "%customer%", 100},
 		},
 		{
@@ -81,7 +81,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time >= ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time >= ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", now, 100},
 		},
 		{
@@ -98,7 +98,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					Limit: &limit,
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time <= ? AND (time < ? OR id < ?) ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time <= ? AND (time < ? OR store_row_id < ?) ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", cursorTime.Unix(), cursorTime.Unix(), cursorID, 50},
 		},
 		{
@@ -113,7 +113,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND ingested_at >= ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND ingested_at >= ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", now, 100},
 		},
 		{
@@ -126,7 +126,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					SortBy:    streaming.EventSortFieldIngestedAt,
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY ingested_at DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY ingested_at DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", 100},
 		},
 		{
@@ -141,7 +141,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND stored_at >= ? ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND stored_at >= ? ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", now, 100},
 		},
 		{
@@ -154,7 +154,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					SortBy:    streaming.EventSortFieldStoredAt,
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY stored_at DESC, id DESC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? ORDER BY stored_at DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", 100},
 		},
 		{
@@ -171,7 +171,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					SortOrder: sortx.OrderAsc,
 				},
 			},
-			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time >= ? AND (time > ? OR id > ?) ORDER BY time ASC, id ASC LIMIT ?",
+			wantSQL:  "SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id FROM openmeter.om_events WHERE namespace = ? AND time >= ? AND (time > ? OR store_row_id > ?) ORDER BY time ASC, store_row_id ASC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", cursorTime.Unix(), cursorTime.Unix(), cursorID, 100},
 		},
 		{
@@ -209,7 +209,7 @@ func TestQueryEventsTableV2_ToSQL(t *testing.T) {
 					},
 				},
 			},
-			wantSQL:  "WITH map('customer1-key', 'customer1-id', 'customer1-subject1', 'customer1-id', 'customer1-subject2', 'customer1-id', 'customer2-key', 'customer2-id', 'customer2-subject1', 'customer2-id', 'customer2-subject2', 'customer2-id') as subject_to_customer_id SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id, subject_to_customer_id[om_events.subject] AS customer_id FROM openmeter.om_events WHERE namespace = ? AND openmeter.om_events.subject IN (?) ORDER BY time DESC, id DESC LIMIT ?",
+			wantSQL:  "WITH map('customer1-key', 'customer1-id', 'customer1-subject1', 'customer1-id', 'customer1-subject2', 'customer1-id', 'customer2-key', 'customer2-id', 'customer2-subject1', 'customer2-id', 'customer2-subject2', 'customer2-id') as subject_to_customer_id SELECT id, type, subject, source, time, data, ingested_at, stored_at, store_row_id, subject_to_customer_id[om_events.subject] AS customer_id FROM openmeter.om_events WHERE namespace = ? AND openmeter.om_events.subject IN (?) ORDER BY time DESC, store_row_id DESC LIMIT ?",
 			wantArgs: []interface{}{"my_namespace", []string{"customer1-key", "customer1-subject1", "customer1-subject2", "customer2-key", "customer2-subject1", "customer2-subject2"}, 100},
 		},
 	}

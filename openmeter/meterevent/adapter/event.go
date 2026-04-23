@@ -93,7 +93,7 @@ func (a *adapter) ListEventsV2(ctx context.Context, params meterevent.ListEvents
 	}
 
 	// Resolve customer IDs to customers if provided
-	if params.CustomerID != nil && len(*params.CustomerID.In) > 0 {
+	if params.CustomerID != nil && params.CustomerID.In != nil && len(*params.CustomerID.In) > 0 {
 		customers, err := a.listCustomers(ctx, params.Namespace, *params.CustomerID.In)
 		if err != nil {
 			return pagination.Result[meterevent.Event]{}, fmt.Errorf("list customers: %w", err)
@@ -124,7 +124,16 @@ func (a *adapter) ListEventsV2(ctx context.Context, params meterevent.ListEvents
 		meterEvents[i].SortBy = listParams.SortBy
 	}
 
-	return pagination.NewResult(meterEvents), nil
+	result := pagination.Result[meterevent.Event]{Items: meterEvents}
+
+	// Only emit a next cursor when the streaming layer returned a full page.
+	effectiveLimit := lo.FromPtrOr(params.Limit, meterevent.MaximumLimit)
+	if len(meterEvents) > 0 && len(meterEvents) == effectiveLimit {
+		cursor := meterEvents[len(meterEvents)-1].Cursor()
+		result.NextCursor = &cursor
+	}
+
+	return result, nil
 }
 
 // listCustomers returns a list of customers.
@@ -204,6 +213,7 @@ func mapEventsToMeterEvents(rawEvents []streaming.RawEvent) []meterevent.Event {
 			CustomerID:       rawEvent.CustomerID,
 			IngestedAt:       rawEvent.IngestedAt,
 			StoredAt:         rawEvent.StoredAt,
+			StoreRowID:       rawEvent.StoreRowID,
 			ValidationErrors: make([]error, 0),
 		}
 

@@ -66,7 +66,11 @@ type Event struct {
 	IngestedAt time.Time
 	// The time the event was stored.
 	StoredAt time.Time
-	// SortBy is the sort column used to generate the cursor. Not serialized.
+	// StoreRowID is the unique per-row identifier assigned at ingest time.
+	// Used as the cursor tiebreak to avoid losing events that share the same
+	// DateTime-second timestamp.
+	StoreRowID string
+	// SortBy is the sort column used to generate the cursor.
 	SortBy streaming.EventSortField
 	// Validation errors.
 	ValidationErrors []error
@@ -80,15 +84,12 @@ var _ pagination.Item = (*Event)(nil)
 func (e Event) Cursor() pagination.Cursor {
 	switch e.SortBy {
 	case streaming.EventSortFieldIngestedAt:
-		return pagination.NewCursor(e.IngestedAt, e.ID)
+		return pagination.NewCursor(e.IngestedAt, e.StoreRowID)
 	case streaming.EventSortFieldStoredAt:
-		return pagination.NewCursor(e.StoredAt, e.ID)
-	case streaming.EventSortFieldTime:
-	default:
-		return pagination.NewCursor(e.Time, e.ID)
+		return pagination.NewCursor(e.StoredAt, e.StoreRowID)
+	default: // EventSortFieldTime and zero value
+		return pagination.NewCursor(e.Time, e.StoreRowID)
 	}
-
-	return pagination.NewCursor(e.Time, e.ID)
 }
 
 // Validate validates the input.

@@ -96,12 +96,13 @@ func TestEvent_Cursor(t *testing.T) {
 		Time:       now,
 		IngestedAt: ingested,
 		StoredAt:   stored,
+		StoreRowID: "01J000000000000000000000AA",
 	}
 
-	t.Run("defaults to time", func(t *testing.T) {
+	t.Run("defaults to time and uses store_row_id as tiebreak", func(t *testing.T) {
 		c := e.Cursor()
 		require.Equal(t, now, c.Time)
-		require.Equal(t, "evt-1", c.ID)
+		require.Equal(t, "01J000000000000000000000AA", c.ID)
 	})
 
 	t.Run("switches to ingested_at", func(t *testing.T) {
@@ -109,6 +110,7 @@ func TestEvent_Cursor(t *testing.T) {
 		ev.SortBy = streaming.EventSortFieldIngestedAt
 		c := ev.Cursor()
 		require.Equal(t, ingested, c.Time)
+		require.Equal(t, "01J000000000000000000000AA", c.ID)
 	})
 
 	t.Run("switches to stored_at", func(t *testing.T) {
@@ -116,5 +118,6 @@ func TestEvent_Cursor(t *testing.T) {
 		ev.SortBy = streaming.EventSortFieldStoredAt
 		c := ev.Cursor()
 		require.Equal(t, stored, c.Time)
+		require.Equal(t, "01J000000000000000000000AA", c.ID)
 	})
 }

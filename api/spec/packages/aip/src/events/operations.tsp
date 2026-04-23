@@ -88,11 +88,12 @@ interface EventsOperations {
     /**
      * Sort events returned in the response.
      * Supported sort attributes are:
-     * - `time`
-     * - `ingested_at` (default)
+     * - `time` (default)
+     * - `ingested_at`
+     * - `stored_at`
      *
-     * The `asc` suffix is optional as the default sort order is ascending.
-     * The `desc` suffix is used to specify a descending order.
+     * The default sort order is descending (most recent first).
+     * Append the `asc` suffix to sort ascending, or the `desc` suffix to sort descending.
      */
     @query
     sort?: Common.SortQuery,

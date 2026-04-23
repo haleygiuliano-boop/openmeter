@@ -220,8 +220,6 @@ func filterError(ctx context.Context, field string, err error) error {
 }
 
 // parseEventSort resolves the public sort query into a backend sort field and direction.
-// The handler allow-lists `time` and `ingested_at`; `stored_at` is rejected at this layer
-// even though the service supports it.
 func parseEventSort(ctx context.Context, sort *api.SortQuery) (streaming.EventSortField, sortx.Order, error) {
 	if sort == nil || *sort == "" {
 		return "", "", nil
@@ -244,6 +242,8 @@ func parseEventSort(ctx context.Context, sort *api.SortQuery) (streaming.EventSo
 		field = streaming.EventSortFieldTime
 	case string(streaming.EventSortFieldIngestedAt):
 		field = streaming.EventSortFieldIngestedAt
+	case string(streaming.EventSortFieldStoredAt):
+		field = streaming.EventSortFieldStoredAt
 	default:
 		err := fmt.Errorf("unsupported sort field: %q", parsed.Field)
 		return "", "", apierrors.NewBadRequestError(ctx, err, apierrors.InvalidParameters{

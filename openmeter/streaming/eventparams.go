@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/openmeterio/openmeter/pkg/filter"
 	"github.com/openmeterio/openmeter/pkg/models"
 	"github.com/openmeterio/openmeter/pkg/pagination/v2"
 	"github.com/openmeterio/openmeter/pkg/sortx"
-	"github.com/samber/lo"
 )
 
 // EventSortField is the column used to order events returned by ListEventsV2.

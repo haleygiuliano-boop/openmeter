@@ -89,11 +89,12 @@ func TestParseEventSort(t *testing.T) {
 		require.Equal(t, sortx.OrderDesc, order)
 	})
 
-	t.Run("stored_at is rejected at handler layer", func(t *testing.T) {
+	t.Run("stored_at is accepted", func(t *testing.T) {
 		sort := api.SortQuery("stored_at")
-		_, _, err := parseEventSort(ctx, &sort)
-		require.Error(t, err)
-		assertBadRequestField(t, err, "sort")
+		field, order, err := parseEventSort(ctx, &sort)
+		require.NoError(t, err)
+		require.Equal(t, streaming.EventSortFieldStoredAt, field)
+		require.Equal(t, sortx.OrderAsc, order)
 	})
 
 	t.Run("unknown field is rejected", func(t *testing.T) {

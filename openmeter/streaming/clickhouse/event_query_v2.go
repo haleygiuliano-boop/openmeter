@@ -7,6 +7,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/openmeterio/openmeter/openmeter/streaming"
+	"github.com/openmeterio/openmeter/pkg/sortx"
 )
 
 const eventQueryV2DefaultLimit = 100
@@ -81,25 +82,49 @@ func (q queryEventsTableV2) toSQL() (string, []interface{}) {
 		}
 	}
 
-	timeColumn := "time"
-	if q.Params.IngestedAt != nil {
-		timeColumn = "ingested_at"
+	if q.Params.StoredAt != nil {
+		expr := q.Params.StoredAt.SelectWhereExpr("stored_at", query)
+		if expr != "" {
+			query.Where(expr)
+		}
+	}
+
+	sortCol := string(q.Params.SortBy)
+	if sortCol == "" {
+		sortCol = string(streaming.EventSortFieldTime)
 	}
 
 	if q.Params.Cursor != nil {
-		query.Where(
-			// First filter by time
-			query.LessEqualThan(timeColumn, q.Params.Cursor.Time.Unix()),
-			// If two events share the same time, then use the id to order
-			query.Or(
-				query.LessThan(timeColumn, q.Params.Cursor.Time.Unix()),
-				query.LessThan("id", q.Params.Cursor.ID),
-			),
-		)
+		if q.Params.SortOrder == sortx.OrderAsc {
+			query.Where(
+				// First filter by sort column
+				query.GreaterEqualThan(sortCol, q.Params.Cursor.Time.Unix()),
+				// If two events share the same time, then use the id to order
+				query.Or(
+					query.GreaterThan(sortCol, q.Params.Cursor.Time.Unix()),
+					query.GreaterThan("id", q.Params.Cursor.ID),
+				),
+			)
+		} else {
+			query.Where(
+				// First filter by sort column
+				query.LessEqualThan(sortCol, q.Params.Cursor.Time.Unix()),
+				// If two events share the same time, then use the id to order
+				query.Or(
+					query.LessThan(sortCol, q.Params.Cursor.Time.Unix()),
+					query.LessThan("id", q.Params.Cursor.ID),
+				),
+			)
+		}
 	}
 
-	// Order by time (DESC) and id (DESC) for stable ordering
-	query.OrderBy(fmt.Sprintf("%s DESC", timeColumn)).OrderBy("id DESC")
+	direction := "DESC"
+	if q.Params.SortOrder == sortx.OrderAsc {
+		direction = "ASC"
+	}
+
+	// Order by sort column and id for stable ordering; tie-break flips with the primary direction.
+	query.OrderBy(fmt.Sprintf("%s %s", sortCol, direction)).OrderBy(fmt.Sprintf("id %s", direction))
 
 	// Apply limit
 	query.Limit(lo.FromPtrOr(q.Params.Limit, eventQueryV2DefaultLimit))

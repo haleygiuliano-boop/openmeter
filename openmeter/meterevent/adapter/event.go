@@ -87,6 +87,9 @@ func (a *adapter) ListEventsV2(ctx context.Context, params meterevent.ListEvents
 		Type:       params.Type,
 		Time:       params.Time,
 		IngestedAt: params.IngestedAt,
+		StoredAt:   params.StoredAt,
+		SortBy:     params.SortBy,
+		SortOrder:  params.SortOrder,
 	}
 
 	// Resolve customer IDs to customers if provided
@@ -114,6 +117,11 @@ func (a *adapter) ListEventsV2(ctx context.Context, params meterevent.ListEvents
 	meterEvents, err := a.eventPostProcess(ctx, params.Namespace, events)
 	if err != nil {
 		return pagination.Result[meterevent.Event]{}, fmt.Errorf("post process events: %w", err)
+	}
+
+	// Propagate the sort column so Event.Cursor() stays consistent with the query's ORDER BY.
+	for i := range meterEvents {
+		meterEvents[i].SortBy = listParams.SortBy
 	}
 
 	return pagination.NewResult(meterEvents), nil

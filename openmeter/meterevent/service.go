@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/openmeterio/openmeter/openmeter/streaming"
 	"github.com/openmeterio/openmeter/pkg/filter"
 	"github.com/openmeterio/openmeter/pkg/pagination/v2"
+	"github.com/openmeterio/openmeter/pkg/sortx"
 )
 
 const (
@@ -64,14 +66,28 @@ type Event struct {
 	IngestedAt time.Time
 	// The time the event was stored.
 	StoredAt time.Time
+	// SortBy is the sort column used to generate the cursor. Not serialized.
+	SortBy streaming.EventSortField
 	// Validation errors.
 	ValidationErrors []error
 }
 
 var _ pagination.Item = (*Event)(nil)
 
-// Cursor returns the cursor for the event.
+// Cursor returns the cursor for the event. The cursor time is taken from the
+// column referenced by SortBy so keyset pagination stays consistent with the
+// underlying ORDER BY.
 func (e Event) Cursor() pagination.Cursor {
+	switch e.SortBy {
+	case streaming.EventSortFieldIngestedAt:
+		return pagination.NewCursor(e.IngestedAt, e.ID)
+	case streaming.EventSortFieldStoredAt:
+		return pagination.NewCursor(e.StoredAt, e.ID)
+	case streaming.EventSortFieldTime:
+	default:
+		return pagination.NewCursor(e.Time, e.ID)
+	}
+
 	return pagination.NewCursor(e.Time, e.ID)
 }
 
@@ -144,6 +160,12 @@ type ListEventsV2Params struct {
 	Time *filter.FilterTime
 	// The ingested at filter.
 	IngestedAt *filter.FilterTime
+	// The stored at filter.
+	StoredAt *filter.FilterTime
+	// The sort column; zero value defaults to "time".
+	SortBy streaming.EventSortField
+	// The sort direction; zero value defaults to DESC.
+	SortOrder sortx.Order
 }
 
 // Validate validates the list events parameters.
@@ -195,10 +217,6 @@ func (p ListEventsV2Params) Validate() error {
 		}
 	}
 
-	if p.Time != nil && p.IngestedAt != nil && !p.Time.IsEmpty() && !p.IngestedAt.IsEmpty() {
-		errs = append(errs, errors.New("time and ingested_at cannot both be set"))
-	}
-
 	if p.Time != nil {
 		if err := p.Time.ValidateWithComplexity(1); err != nil {
 			errs = append(errs, fmt.Errorf("time: %w", err))
@@ -209,6 +227,16 @@ func (p ListEventsV2Params) Validate() error {
 		if err := p.IngestedAt.ValidateWithComplexity(1); err != nil {
 			errs = append(errs, fmt.Errorf("ingested_at: %w", err))
 		}
+	}
+
+	if p.StoredAt != nil {
+		if err := p.StoredAt.ValidateWithComplexity(1); err != nil {
+			errs = append(errs, fmt.Errorf("stored_at: %w", err))
+		}
+	}
+
+	if err := p.SortBy.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("sort by: %w", err))
 	}
 
 	if p.Limit != nil && *p.Limit < 1 {
